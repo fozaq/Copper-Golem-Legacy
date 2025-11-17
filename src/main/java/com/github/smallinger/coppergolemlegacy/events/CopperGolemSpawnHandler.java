@@ -1,0 +1,124 @@
+package com.github.smallinger.coppergolemlegacy.events;
+
+import com.github.smallinger.coppergolemlegacy.CopperGolemLegacy;
+import com.github.smallinger.coppergolemlegacy.ModTags;
+import com.github.smallinger.coppergolemlegacy.block.CopperChestBlock;
+import com.github.smallinger.coppergolemlegacy.entity.CopperGolemEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.level.BlockEvent;
+
+@EventBusSubscriber(modid = CopperGolemLegacy.MODID)
+public class CopperGolemSpawnHandler {
+
+    @SubscribeEvent
+    public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
+        Level level = (Level) event.getLevel();
+        BlockPos pos = event.getPos();
+        BlockState placedState = event.getPlacedBlock();
+        
+        // Check if a carved pumpkin was placed
+        if (placedState.is(Blocks.CARVED_PUMPKIN) && level instanceof ServerLevel serverLevel) {
+            // Get player direction
+            Direction playerDirection = Direction.NORTH;
+            if (event.getEntity() != null) {
+                playerDirection = Direction.fromYRot(event.getEntity().getYRot());
+            }
+            trySpawnCopperGolem(serverLevel, pos, playerDirection);
+        }
+    }
+    
+    private static void trySpawnCopperGolem(ServerLevel level, BlockPos pumpkinPos, Direction playerDirection) {
+        // Check if there's a copper block below the pumpkin
+        BlockPos copperPos = pumpkinPos.below();
+        BlockState copperState = level.getBlockState(copperPos);
+        
+        // Check if it's a copper block (any oxidation state)
+        if (copperState.is(ModTags.Blocks.COPPER)) {
+            // Use opposite direction to face the player (180 degrees)
+            Direction direction = playerDirection.getOpposite();
+            
+            // Remove the pumpkin
+            level.setBlock(pumpkinPos, Blocks.AIR.defaultBlockState(), 2);
+            
+            // Replace copper block with copper chest using the original logic
+            Block copperBlock = copperState.getBlock();
+            BlockState chestState = CopperChestBlock.getFromCopperBlock(copperBlock, direction, level, copperPos);
+            level.setBlock(copperPos, chestState, 2);
+            
+            // Play break particle for pumpkin
+            level.levelEvent(2001, pumpkinPos, Block.getId(Blocks.CARVED_PUMPKIN.defaultBlockState()));
+            
+            // Spawn the Copper Golem
+            CopperGolemEntity copperGolem = CopperGolemLegacy.COPPER_GOLEM.get().create(level);
+            if (copperGolem != null) {
+                // Position on top of the chest (Y + 1.0 to be on top of the chest collision box)
+                // Set rotation: chest direction - 90 degrees clockwise
+                float yaw = direction.toYRot();
+                copperGolem.moveTo(
+                    copperPos.getX() + 0.5,
+                    copperPos.getY() + 1.0,
+                    copperPos.getZ() + 0.5,
+                    yaw,
+                    0.0F
+                );
+                
+                // Explicitly set all rotation values to ensure correct facing
+                copperGolem.setYRot(yaw);
+                copperGolem.yRotO = yaw;
+                copperGolem.setYBodyRot(yaw);
+                copperGolem.yBodyRotO = yaw;
+                copperGolem.setYHeadRot(yaw);
+                copperGolem.yHeadRotO = yaw;
+                
+                // Set the oxidation state based on the copper block type
+                WeatheringCopper.WeatherState weatherState = getWeatherStateFromBlock(copperState.getBlock());
+                copperGolem.setWeatherState(weatherState);
+                
+                // Add to world
+                level.addFreshEntity(copperGolem);
+                
+                // Trigger advancement for nearby players
+                for (ServerPlayer player : level.getEntitiesOfClass(ServerPlayer.class, 
+                        copperGolem.getBoundingBox().inflate(5.0))) {
+                    // Could trigger custom advancement here
+                }
+                
+                // Update neighboring blocks
+                level.updateNeighborsAt(copperPos, chestState.getBlock());
+                level.updateNeighborsAt(pumpkinPos, Blocks.AIR);
+            }
+        }
+    }
+    
+    private static WeatheringCopper.WeatherState getWeatherStateFromBlock(Block block) {
+        if (block instanceof WeatheringCopper weatheringCopper) {
+            return weatheringCopper.getAge();
+        }
+        
+        // Check if it's a waxed variant
+        if (block == Blocks.WAXED_COPPER_BLOCK) {
+            return WeatheringCopper.WeatherState.UNAFFECTED;
+        } else if (block == Blocks.WAXED_EXPOSED_COPPER) {
+            return WeatheringCopper.WeatherState.EXPOSED;
+        } else if (block == Blocks.WAXED_WEATHERED_COPPER) {
+            return WeatheringCopper.WeatherState.WEATHERED;
+        } else if (block == Blocks.WAXED_OXIDIZED_COPPER) {
+            return WeatheringCopper.WeatherState.OXIDIZED;
+        }
+        
+        // Default to unaffected
+        return WeatheringCopper.WeatherState.UNAFFECTED;
+    }
+}
+

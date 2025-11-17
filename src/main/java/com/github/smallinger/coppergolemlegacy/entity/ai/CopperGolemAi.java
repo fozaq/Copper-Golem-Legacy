@@ -1,0 +1,255 @@
+package com.github.smallinger.coppergolemlegacy.entity.ai;
+
+import com.github.smallinger.coppergolemlegacy.ModMemoryTypes;
+import com.github.smallinger.coppergolemlegacy.ModSounds;
+import com.github.smallinger.coppergolemlegacy.ModTags;
+import com.github.smallinger.coppergolemlegacy.entity.CopperGolemEntity;
+import com.github.smallinger.coppergolemlegacy.entity.CopperGolemState;
+import com.github.smallinger.coppergolemlegacy.entity.ai.behavior.InteractWithDoor;
+import com.github.smallinger.coppergolemlegacy.entity.ai.behavior.TransportItemsBetweenContainers;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.Brain;
+import net.minecraft.world.entity.ai.behavior.*;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.ai.memory.MemoryStatus;
+import net.minecraft.world.entity.ai.sensing.Sensor;
+import net.minecraft.world.entity.ai.sensing.SensorType;
+import net.minecraft.world.entity.schedule.Activity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+
+import javax.annotation.Nullable;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+/**
+ * AI Brain System für Copper Golem
+ * Basierend auf der Original-Implementation aus Minecraft 1.21.10
+ */
+public class CopperGolemAi {
+    
+    // Sensor Types für Brain-System
+    private static final ImmutableList<SensorType<? extends Sensor<? super CopperGolemEntity>>> SENSOR_TYPES = ImmutableList.of(
+        SensorType.NEAREST_LIVING_ENTITIES,
+        SensorType.HURT_BY
+    );
+    
+    // Memory Module Types für Brain-System
+    private static final ImmutableList<MemoryModuleType<?>> MEMORY_TYPES = ImmutableList.of(
+        MemoryModuleType.PATH,
+        MemoryModuleType.WALK_TARGET,
+        MemoryModuleType.LOOK_TARGET,
+        MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES,
+        MemoryModuleType.HURT_BY,
+        MemoryModuleType.HURT_BY_ENTITY,
+        MemoryModuleType.IS_PANICKING,
+        MemoryModuleType.CANT_REACH_WALK_TARGET_SINCE,
+        MemoryModuleType.NEAREST_LIVING_ENTITIES,
+        MemoryModuleType.DOORS_TO_CLOSE,  // Für Tür-Interaktionen
+        ModMemoryTypes.GAZE_COOLDOWN_TICKS.get(),
+        ModMemoryTypes.TRANSPORT_ITEMS_COOLDOWN_TICKS.get(),
+        ModMemoryTypes.VISITED_BLOCK_POSITIONS.get(),
+        ModMemoryTypes.UNREACHABLE_TRANSPORT_BLOCK_POSITIONS.get()
+        // MemoryModuleType.DOORS_TO_CLOSE - requires InteractWithDoor from 1.21.10+
+    );
+    
+    /**
+     * Erstellt Brain.Provider für Copper Golem
+     */
+    public static Brain.Provider<CopperGolemEntity> brainProvider() {
+        return Brain.provider(MEMORY_TYPES, SENSOR_TYPES);
+    }
+    
+    /**
+     * Erstellt und konfiguriert Brain für Copper Golem
+     */
+    public static Brain<CopperGolemEntity> makeBrain(Brain<CopperGolemEntity> brain) {
+        initCoreActivity(brain);
+        initIdleActivity(brain);
+        brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
+        brain.setDefaultActivity(Activity.IDLE);
+        brain.useDefaultActivity();
+        return brain;
+    }
+    
+    /**
+     * Core Activity - Grundlegende Behaviors die immer aktiv sind
+     * WICHTIG: Kein Swim Behavior! Copper Golems ertrinken im Wasser (wie im Original)
+     */
+    private static void initCoreActivity(Brain<CopperGolemEntity> brain) {
+        brain.addActivity(
+            Activity.CORE,
+            0,
+            ImmutableList.<BehaviorControl<? super CopperGolemEntity>>of(
+                new AnimalPanic<>(1.5F),  // Panik-Verhalten wenn beschädigt
+                new LookAtTargetSink(45, 90),  // Schaut zum Look-Target
+                new MoveToTargetSink(),  // Bewegt sich zum Walk-Target
+                InteractWithDoor.create(),  // Türen öffnen und schließen
+                new CountDownCooldownTicks(ModMemoryTypes.GAZE_COOLDOWN_TICKS.get()),  // Gaze Cooldown
+                new CountDownCooldownTicks(ModMemoryTypes.TRANSPORT_ITEMS_COOLDOWN_TICKS.get())  // Transport Cooldown
+            )
+        );
+    }
+    
+    /**
+     * Idle Activity - Behaviors wenn Golem nichts Spezielles tut
+     * Priority 0: Item Transport (höchste Priorität)
+     * Priority 1: Schaue manchmal Spieler an
+     * Priority 2: Herumlaufen oder Stillstehen (wenn Cooldown aktiv)
+     */
+    private static void initIdleActivity(Brain<CopperGolemEntity> brain) {
+        brain.addActivity(
+            Activity.IDLE,
+            ImmutableList.of(
+                // Prio 0: Item Transport zwischen Copper Chests und Regular Chests
+                Pair.of(0, new TransportItemsBetweenContainers(
+                    1.0F,  // Speed Modifier
+                    state -> state.is(ModTags.Blocks.COPPER_CHESTS),  // Source: Copper Chests
+                    state -> state.is(Blocks.CHEST) || state.is(Blocks.TRAPPED_CHEST),  // Destination: Regular Chests
+                    32,  // Horizontal Search Distance
+                    8,   // Vertical Search Distance
+                    getTargetReachedInteractions(),  // Interaction callbacks
+                    onTravelling(),  // On start travelling callback
+                    shouldQueueForTarget()  // Should queue predicate
+                )),
+                
+                // Prio 1: Schaue manchmal Spieler an (6 Blöcke Reichweite, 40-80 Ticks Interval)
+                Pair.of(1, SetEntityLookTargetSometimes.create(EntityType.PLAYER, 6.0F, UniformInt.of(40, 80))),
+                
+                // Prio 2: Herumlaufen oder Stillstehen
+                // Nur wenn kein Walk-Target gesetzt ist UND Transport-Cooldown aktiv ist
+                Pair.of(2, new RunOne<>(
+                    ImmutableMap.of(
+                        MemoryModuleType.WALK_TARGET, MemoryStatus.VALUE_ABSENT,
+                        ModMemoryTypes.TRANSPORT_ITEMS_COOLDOWN_TICKS.get(), MemoryStatus.VALUE_PRESENT
+                    ),
+                    ImmutableList.of(
+                        // 50% Chance: Zufällig herumlaufen (1.0 Speed, max 2 Blöcke horizontal, 2 Blöcke vertikal)
+                        Pair.of(RandomStroll.stroll(1.0F, 2, 2), 1),
+                        // 50% Chance: Stillstehen für 30-60 Ticks
+                        Pair.of(new DoNothing(30, 60), 1)
+                    )
+                ))
+            )
+        );
+    }
+    
+    /**
+     * Erstellt die Map mit Interaktions-Callbacks für Container-Interaktionen
+     */
+    private static Map<TransportItemsBetweenContainers.ContainerInteractionState, TransportItemsBetweenContainers.OnTargetReachedInteraction> getTargetReachedInteractions() {
+        return Map.of(
+            TransportItemsBetweenContainers.ContainerInteractionState.PICKUP_ITEM,
+            onReachedTargetInteraction(CopperGolemState.GETTING_ITEM, ModSounds.COPPER_GOLEM_ITEM_GET.get()),
+            TransportItemsBetweenContainers.ContainerInteractionState.PICKUP_NO_ITEM,
+            onReachedTargetInteraction(CopperGolemState.GETTING_NO_ITEM, ModSounds.COPPER_GOLEM_ITEM_NO_GET.get()),
+            TransportItemsBetweenContainers.ContainerInteractionState.PLACE_ITEM,
+            onReachedTargetInteraction(CopperGolemState.DROPPING_ITEM, ModSounds.COPPER_GOLEM_ITEM_DROP.get()),
+            TransportItemsBetweenContainers.ContainerInteractionState.PLACE_NO_ITEM,
+            onReachedTargetInteraction(CopperGolemState.DROPPING_NO_ITEM, ModSounds.COPPER_GOLEM_ITEM_NO_DROP.get())
+        );
+    }
+    
+    /**
+     * Callback wenn Golem ein Target erreicht hat
+     * Setzt Animation State und öffnet/schließt Container
+     */
+    private static TransportItemsBetweenContainers.OnTargetReachedInteraction onReachedTargetInteraction(
+        CopperGolemState state, @Nullable net.minecraft.sounds.SoundEvent sound
+    ) {
+        return (mob, target, tick) -> {
+            if (mob instanceof CopperGolemEntity copperGolem) {
+                if (tick == 1) {
+                    // Container öffnen mit Sound
+                    playChestSound(copperGolem, target.pos(), true);
+                    copperGolem.setOpenedChestPos(target.pos());
+                    copperGolem.setState(state);
+                }
+                
+                // Tick 9: Item-Interaction Sound abspielen
+                if (tick == 9 && sound != null) {
+                    copperGolem.playSound(sound, 1.0F, 1.0F);
+                }
+                
+                if (tick == 60) {
+                    // Container schließen mit Sound
+                    playChestSound(copperGolem, target.pos(), false);
+                    copperGolem.clearOpenedChestPos();
+                }
+            }
+        };
+    }
+    
+    /**
+     * Spielt den Chest Open/Close Sound ab und triggert die Animation
+     */
+    private static void playChestSound(CopperGolemEntity golem, BlockPos pos, boolean open) {
+        Level level = golem.level();
+        
+        // Spiele den entsprechenden Sound (Copper Chest oder Regular Chest)
+        net.minecraft.sounds.SoundEvent soundEvent;
+        if (level.getBlockState(pos).is(ModTags.Blocks.COPPER_CHESTS)) {
+            // Copper Chest Sound
+            soundEvent = open ? ModSounds.COPPER_CHEST_OPEN.get() : ModSounds.COPPER_CHEST_CLOSE.get();
+        } else {
+            // Regular Chest Sound
+            soundEvent = open ? SoundEvents.CHEST_OPEN : SoundEvents.CHEST_CLOSE;
+        }
+        
+        level.playSound(null, pos, soundEvent, SoundSource.BLOCKS, 0.5F, level.random.nextFloat() * 0.1F + 0.9F);
+        
+        // Triggere die Chest Animation (1 = open, 0 = close)
+        net.minecraft.world.level.block.entity.BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity instanceof net.minecraft.world.level.block.entity.ChestBlockEntity) {
+            level.blockEvent(pos, level.getBlockState(pos).getBlock(), 1, open ? 1 : 0);
+        }
+        
+        // GameEvent für andere Systeme
+        level.gameEvent(golem, 
+            open ? net.minecraft.world.level.gameevent.GameEvent.CONTAINER_OPEN : net.minecraft.world.level.gameevent.GameEvent.CONTAINER_CLOSE, 
+            pos);
+    }
+    
+    /**
+     * Callback wenn Golem zu einem Target läuft
+     * Setzt State zurück auf IDLE
+     */
+    private static Consumer<PathfinderMob> onTravelling() {
+        return mob -> {
+            if (mob instanceof CopperGolemEntity copperGolem) {
+                copperGolem.clearOpenedChestPos();
+                copperGolem.setState(CopperGolemState.IDLE);
+            }
+        };
+    }
+    
+    /**
+     * Prüft ob ein anderer Mob bereits mit dem Target interagiert
+     * Wenn ja, sollte der Golem in eine Warteschlange gehen
+     */
+    private static Predicate<TransportItemsBetweenContainers.TransportItemTarget> shouldQueueForTarget() {
+        return target -> {
+            // Queue wenn ein anderer Golem bereits mit der Kiste interagiert
+            // Einfache Implementation: kein Queueing da getEntitiesWithContainerOpen() nicht verfügbar in 1.21.1
+            return false;
+        };
+    }
+    
+    /**
+     * Update Activity - Wird jeden Tick aufgerufen
+     */
+    public static void updateActivity(CopperGolemEntity golem) {
+        golem.getBrain().setActiveActivityToFirstValid(ImmutableList.of(Activity.IDLE));
+    }
+}
+
