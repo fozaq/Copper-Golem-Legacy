@@ -2,6 +2,77 @@
 
 All notable changes to the Copper Golem Legacy mod will be documented in this file.
 
+## [0.0.3] - 2025-01-18
+
+### Added
+- **Copper Button System**
+  - Four oxidation variants: copper_button, exposed_copper_button, weathered_copper_button, oxidized_copper_button
+  - Four waxed variants: waxed_copper_button, waxed_exposed_copper_button, waxed_weathered_copper_button, waxed_oxidized_copper_button
+  - 15 tick (1.5 seconds) activation time matching wooden buttons
+  - Full oxidation progression over time
+  - Oxidized buttons are non-functional and play copper hit sound when attempted to use
+  - Waxed oxidized buttons remain functional
+
+- **Copper Button Interactions**
+  - Axe scraping removes oxidation levels (oxidized → weathered → exposed → copper)
+  - Honeycomb application converts to waxed variant (stops oxidation)
+  - Axe removes wax from waxed buttons
+  - All interactions preserve button state (facing, powered, face position)
+  - Proper sound effects (AXE_SCRAPE, HONEYCOMB_WAX_ON, AXE_WAX_OFF, COPPER_HIT)
+  - Particle effects for scraping and waxing operations
+
+- **Copper Golem AI: Button Pressing**
+  - Copper Golems can now randomly search for and press nearby copper buttons
+  - Golems walk at normal speed to buttons, stop completely when arriving, then play pressing animation
+  - Custom button-pressing animation with arm and body movement (1 second duration)
+  - Animation plays first, button is pressed at peak of animation (0.375s mark)
+  - Must be within 0.8 blocks before stopping and starting animation (very close positioning)
+  - **Improved Animation Behavior:**
+    - Golem stops completely for 5 ticks before starting button press animation
+    - Walk and run animations are completely disabled during button pressing
+    - Idle animation no longer plays during button press state
+    - Press animation plays exclusively without interference from movement animations
+    - Animation timing: starts at tick 6, button pressed at tick 14, completes at tick 30
+  - Proper stopping mechanism: halts navigation, clears all movement (including Zza), zeroes velocity, and stops walk animation
+  - Configurable behavior via config file (enabled by default)
+  - Golems search within 16 blocks horizontally and 4 blocks vertically
+  - Global cooldown: 5-15 seconds (random) wait time after pressing any button before searching for next
+  - Per-button cooldown: 20-40 seconds (random) before the same button can be pressed again
+  - Prevents rapid consecutive button presses through timestamp-based tracking
+  - Respects oxidized button state (won't press non-waxed oxidized buttons)
+
+- **Configuration System**
+  - New config file: `coppergolemlegacy-common.toml`
+  - `golemPressesButtons` setting to enable/disable button-pressing AI (default: true)
+  - Server/singleplayer controllable
+
+- **Crafting Recipes**
+  - Copper buttons craftable from corresponding cut copper blocks (1 cut copper → 1 button)
+  - Waxed buttons craftable with button + honeycomb (shapeless)
+  - Waxed buttons also craftable directly from waxed cut copper blocks
+  - Copper chests craftable from 8 copper blocks in ring pattern
+  - All recipes for all oxidation variants
+
+- **Assets & Data**
+  - Complete blockstate files for all button variants with all orientations (ceiling, floor, wall)
+  - Block and item models using vanilla copper block textures
+  - Loot tables for all button and chest variants
+  - English translations for all new blocks
+
+- **Creative Tab Integration**
+  - All copper buttons added to Redstone Blocks creative tab
+  - Both normal and waxed variants included
+
+### Technical
+- `CopperButtonBlock` class implementing WeatheringCopper interface
+- `WaxedCopperButtonBlock` class for non-oxidizing variants
+- `PressRandomCopperButton` AI behavior for button-pressing logic with enhanced stopping mechanism
+- `CopperGolemModel` with state-based animation control to prevent walk/run animations during button pressing
+- `CopperGolemLegacyConfig` class for mod configuration
+- Button reference system linking waxed/unwaxed variants
+- FMLCommonSetupEvent listener for button reference initialization
+- Enhanced animation state management for cleaner, more realistic button pressing behavior
+
 ## [0.0.2] - 2025-01-18
 
 ### Fixed

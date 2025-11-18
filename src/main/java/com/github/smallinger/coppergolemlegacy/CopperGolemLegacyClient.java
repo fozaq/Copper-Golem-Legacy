@@ -12,10 +12,16 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod(value = CopperGolemLegacy.MODID, dist = Dist.CLIENT)
 public class CopperGolemLegacyClient {
     public CopperGolemLegacyClient(ModContainer container, net.neoforged.bus.api.IEventBus modEventBus) {
+        
+        // Register config screen
+        container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         
         // Register entity renderers on MOD bus
         modEventBus.addListener(CopperGolemLegacyClient::registerEntityRenderers);

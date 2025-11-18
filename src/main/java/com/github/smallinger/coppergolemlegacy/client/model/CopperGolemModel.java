@@ -46,6 +46,7 @@ public class CopperGolemModel extends HierarchicalModel<CopperGolemEntity> imple
     private final AnimationDefinition interactionGetNoItem;
     private final AnimationDefinition interactionDropItem;
     private final AnimationDefinition interactionDropNoItem;
+    private final AnimationDefinition pressButton;
 
     public CopperGolemModel(ModelPart root) {
         this.root = root;
@@ -64,6 +65,7 @@ public class CopperGolemModel extends HierarchicalModel<CopperGolemEntity> imple
         this.interactionGetNoItem = CopperGolemAnimation.COPPER_GOLEM_CHEST_INTERACTION_NOITEM_NOGET;
         this.interactionDropItem = CopperGolemAnimation.COPPER_GOLEM_CHEST_INTERACTION_ITEM_DROP;
         this.interactionDropNoItem = CopperGolemAnimation.COPPER_GOLEM_CHEST_INTERACTION_ITEM_NODROP;
+        this.pressButton = CopperGolemAnimation.COPPER_GOLEM_PRESS_BUTTON;
     }
 
     // Entity model (living Copper Golem) - uses transformed mesh with Y translation
@@ -275,9 +277,13 @@ public class CopperGolemModel extends HierarchicalModel<CopperGolemEntity> imple
         this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
         this.head.xRot = headPitch * ((float)Math.PI / 180F);
 
+        // Get current state
+        CopperGolemState state = entity.getState();
+        
         // Apply walking animation based on whether entity has items
+        // BUT only if NOT pressing button (no walk/run animation during button press)
         boolean hasItems = !entity.getMainHandItem().isEmpty();
-        if (limbSwingAmount > 0.0F) {
+        if (limbSwingAmount > 0.0F && state != CopperGolemState.PRESSING_BUTTON) {
             if (hasItems) {
                 this.animateWalk(this.walkWithItemAnimation, limbSwing, limbSwingAmount, 2.0F, 2.5F);
                 this.poseHeldItemArmsIfStill();
@@ -286,16 +292,18 @@ public class CopperGolemModel extends HierarchicalModel<CopperGolemEntity> imple
             }
         }
 
-        // Apply idle animation
-        this.animate(entity.idleAnimationState, this.idleAnimation, ageInTicks);
+        // Apply idle animation (only when not interacting)
+        if (state == CopperGolemState.IDLE) {
+            this.animate(entity.idleAnimationState, this.idleAnimation, ageInTicks);
+        }
         
         // Apply interaction animations based on state
-        CopperGolemState state = entity.getState();
         switch (state) {
             case GETTING_ITEM -> this.animate(entity.interactionGetItemAnimationState, this.interactionGetItem, ageInTicks);
             case GETTING_NO_ITEM -> this.animate(entity.interactionGetNoItemAnimationState, this.interactionGetNoItem, ageInTicks);
             case DROPPING_ITEM -> this.animate(entity.interactionDropItemAnimationState, this.interactionDropItem, ageInTicks);
             case DROPPING_NO_ITEM -> this.animate(entity.interactionDropNoItemAnimationState, this.interactionDropNoItem, ageInTicks);
+            case PRESSING_BUTTON -> this.animate(entity.pressingButtonAnimationState, this.pressButton, ageInTicks);
             default -> {}
         }
     }

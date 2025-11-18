@@ -1,13 +1,18 @@
 {
-  "itemGroup.coppergolemlegacy": "Example Mod Tab",
-  "block.coppergolemlegacy.example_block": "Example Block",
-  "item.coppergolemlegacy.example_item": "Example Item",
   "item.coppergolemlegacy.copper_golem_spawn_egg": "Copper Golem Spawn Egg",
   "entity.coppergolemlegacy.copper_golem": "Copper Golem",
   "block.coppergolemlegacy.copper_chest": "Copper Chest",
   "block.coppergolemlegacy.exposed_copper_chest": "Exposed Copper Chest",
   "block.coppergolemlegacy.weathered_copper_chest": "Weathered Copper Chest",
   "block.coppergolemlegacy.oxidized_copper_chest": "Oxidized Copper Chest",
+  "block.coppergolemlegacy.copper_button": "Copper Button",
+  "block.coppergolemlegacy.exposed_copper_button": "Exposed Copper Button",
+  "block.coppergolemlegacy.weathered_copper_button": "Weathered Copper Button",
+  "block.coppergolemlegacy.oxidized_copper_button": "Oxidized Copper Button",
+  "block.coppergolemlegacy.waxed_copper_button": "Waxed Copper Button",
+  "block.coppergolemlegacy.waxed_exposed_copper_button": "Waxed Exposed Copper Button",
+  "block.coppergolemlegacy.waxed_weathered_copper_button": "Waxed Weathered Copper Button",
+  "block.coppergolemlegacy.waxed_oxidized_copper_button": "Waxed Oxidized Copper Button",
   "block.coppergolemlegacy.copper_golem_statue": "Copper Golem Statue",
   "block.coppergolemlegacy.exposed_copper_golem_statue": "Exposed Copper Golem Statue",
   "block.coppergolemlegacy.weathered_copper_golem_statue": "Weathered Copper Golem Statue",
@@ -19,5 +24,10 @@
   "subtitles.entity.copper_golem.head_spin": "Copper Golem spins head",
   "subtitles.entity.copper_golem.spawn": "Copper Golem spawns",
   "subtitles.block.copper_chest.close": "Copper Chest closes",
-  "subtitles.block.copper_chest.open": "Copper Chest opens"
+  "subtitles.block.copper_chest.open": "Copper Chest opens",
+
+  "coppergolemlegacy.configuration.title": "Copper Golem Legacy Configuration",
+  "coppergolemlegacy.configuration.coppergolemai": "Copper Golem AI",
+  "coppergolemlegacy.configuration.golemPressesButtons": "Golem Presses Buttons",
+  "coppergolemlegacy.configuration.golemPressesButtons.tooltip": "Enable or disable Copper Golems randomly pressing copper buttons"
 }

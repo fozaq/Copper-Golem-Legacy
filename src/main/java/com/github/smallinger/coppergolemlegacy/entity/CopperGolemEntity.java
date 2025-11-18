@@ -87,6 +87,7 @@ public class CopperGolemEntity extends AbstractGolem implements Shearable, Conta
     public final AnimationState interactionGetNoItemAnimationState = new AnimationState();
     public final AnimationState interactionDropItemAnimationState = new AnimationState();
     public final AnimationState interactionDropNoItemAnimationState = new AnimationState();
+    public final AnimationState pressingButtonAnimationState = new AnimationState();
 
     public CopperGolemEntity(EntityType<? extends AbstractGolem> entityType, Level level) {
         super(entityType, level);
@@ -289,6 +290,7 @@ public class CopperGolemEntity extends AbstractGolem implements Shearable, Conta
                 this.interactionGetItemAnimationState.stop();
                 this.interactionDropItemAnimationState.stop();
                 this.interactionDropNoItemAnimationState.stop();
+                this.pressingButtonAnimationState.stop();
                 
                 if (this.idleAnimationStartTick == this.tickCount) {
                     this.idleAnimationState.start(this.tickCount);
@@ -307,6 +309,7 @@ public class CopperGolemEntity extends AbstractGolem implements Shearable, Conta
                 this.interactionGetNoItemAnimationState.stop();
                 this.interactionDropItemAnimationState.stop();
                 this.interactionDropNoItemAnimationState.stop();
+                this.pressingButtonAnimationState.stop();
                 this.interactionGetItemAnimationState.startIfStopped(this.tickCount);
                 break;
             case GETTING_NO_ITEM:
@@ -315,6 +318,7 @@ public class CopperGolemEntity extends AbstractGolem implements Shearable, Conta
                 this.interactionGetItemAnimationState.stop();
                 this.interactionDropNoItemAnimationState.stop();
                 this.interactionDropItemAnimationState.stop();
+                this.pressingButtonAnimationState.stop();
                 this.interactionGetNoItemAnimationState.startIfStopped(this.tickCount);
                 break;
             case DROPPING_ITEM:
@@ -323,6 +327,7 @@ public class CopperGolemEntity extends AbstractGolem implements Shearable, Conta
                 this.interactionGetItemAnimationState.stop();
                 this.interactionGetNoItemAnimationState.stop();
                 this.interactionDropNoItemAnimationState.stop();
+                this.pressingButtonAnimationState.stop();
                 this.interactionDropItemAnimationState.startIfStopped(this.tickCount);
                 break;
             case DROPPING_NO_ITEM:
@@ -331,7 +336,17 @@ public class CopperGolemEntity extends AbstractGolem implements Shearable, Conta
                 this.interactionGetItemAnimationState.stop();
                 this.interactionGetNoItemAnimationState.stop();
                 this.interactionDropItemAnimationState.stop();
+                this.pressingButtonAnimationState.stop();
                 this.interactionDropNoItemAnimationState.startIfStopped(this.tickCount);
+                break;
+            case PRESSING_BUTTON:
+                this.idleAnimationState.stop();
+                this.idleAnimationStartTick = 0;
+                this.interactionGetItemAnimationState.stop();
+                this.interactionGetNoItemAnimationState.stop();
+                this.interactionDropItemAnimationState.stop();
+                this.interactionDropNoItemAnimationState.stop();
+                this.pressingButtonAnimationState.startIfStopped(this.tickCount);
                 break;
         }
     }

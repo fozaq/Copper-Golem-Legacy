@@ -1,11 +1,13 @@
 package com.github.smallinger.coppergolemlegacy.entity.ai;
 
+import com.github.smallinger.coppergolemlegacy.CopperGolemLegacyConfig;
 import com.github.smallinger.coppergolemlegacy.ModMemoryTypes;
 import com.github.smallinger.coppergolemlegacy.ModSounds;
 import com.github.smallinger.coppergolemlegacy.ModTags;
 import com.github.smallinger.coppergolemlegacy.entity.CopperGolemEntity;
 import com.github.smallinger.coppergolemlegacy.entity.CopperGolemState;
 import com.github.smallinger.coppergolemlegacy.entity.ai.behavior.InteractWithDoor;
+import com.github.smallinger.coppergolemlegacy.entity.ai.behavior.PressRandomCopperButton;
 import com.github.smallinger.coppergolemlegacy.entity.ai.behavior.TransportItemsBetweenContainers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,44 +106,54 @@ public class CopperGolemAi {
     /**
      * Idle Activity - Behaviors wenn Golem nichts Spezielles tut
      * Priority 0: Item Transport (höchste Priorität)
-     * Priority 1: Schaue manchmal Spieler an
-     * Priority 2: Herumlaufen oder Stillstehen (wenn Cooldown aktiv)
+     * Priority 1: Press Random Copper Button (wenn Config aktiviert)
+     * Priority 2: Schaue manchmal Spieler an
+     * Priority 3: Herumlaufen oder Stillstehen (wenn Cooldown aktiv)
      */
     private static void initIdleActivity(Brain<CopperGolemEntity> brain) {
-        brain.addActivity(
-            Activity.IDLE,
+        ImmutableList.Builder<Pair<Integer, ? extends BehaviorControl<? super CopperGolemEntity>>> behaviorsBuilder = ImmutableList.builder();
+        
+        // Prio 0: Item Transport zwischen Copper Chests und Regular Chests
+        behaviorsBuilder.add(Pair.of(0, new TransportItemsBetweenContainers(
+            1.0F,  // Speed Modifier
+            state -> state.is(ModTags.Blocks.COPPER_CHESTS),  // Source: Copper Chests
+            state -> state.is(Blocks.CHEST) || state.is(Blocks.TRAPPED_CHEST),  // Destination: Regular Chests
+            32,  // Horizontal Search Distance
+            8,   // Vertical Search Distance
+            getTargetReachedInteractions(),  // Interaction callbacks
+            onTravelling(),  // On start travelling callback
+            shouldQueueForTarget()  // Should queue predicate
+        )));
+        
+        // Prio 1: Press Random Copper Button (nur wenn Config aktiviert)
+        if (CopperGolemLegacyConfig.GOLEM_PRESSES_BUTTONS.get()) {
+            behaviorsBuilder.add(Pair.of(1, new PressRandomCopperButton(
+                1.0F,  // Speed Modifier (normale Geschwindigkeit)
+                16,    // Horizontal Search Distance (16 Blöcke)
+                4,     // Vertical Search Distance (4 Blöcke)
+                150    // Base Press Interval (7.5 Sekunden = 150 Ticks, behavior adds randomness internally)
+            )));
+        }
+        
+        // Prio 2: Schaue manchmal Spieler an (6 Blöcke Reichweite, 40-80 Ticks Interval)
+        behaviorsBuilder.add(Pair.of(2, SetEntityLookTargetSometimes.create(EntityType.PLAYER, 6.0F, UniformInt.of(40, 80))));
+        
+        // Prio 3: Herumlaufen oder Stillstehen
+        // Nur wenn kein Walk-Target gesetzt ist UND Transport-Cooldown aktiv ist
+        behaviorsBuilder.add(Pair.of(3, new RunOne<>(
+            ImmutableMap.of(
+                MemoryModuleType.WALK_TARGET, MemoryStatus.VALUE_ABSENT,
+                ModMemoryTypes.TRANSPORT_ITEMS_COOLDOWN_TICKS.get(), MemoryStatus.VALUE_PRESENT
+            ),
             ImmutableList.of(
-                // Prio 0: Item Transport zwischen Copper Chests und Regular Chests
-                Pair.of(0, new TransportItemsBetweenContainers(
-                    1.0F,  // Speed Modifier
-                    state -> state.is(ModTags.Blocks.COPPER_CHESTS),  // Source: Copper Chests
-                    state -> state.is(Blocks.CHEST) || state.is(Blocks.TRAPPED_CHEST),  // Destination: Regular Chests
-                    32,  // Horizontal Search Distance
-                    8,   // Vertical Search Distance
-                    getTargetReachedInteractions(),  // Interaction callbacks
-                    onTravelling(),  // On start travelling callback
-                    shouldQueueForTarget()  // Should queue predicate
-                )),
-                
-                // Prio 1: Schaue manchmal Spieler an (6 Blöcke Reichweite, 40-80 Ticks Interval)
-                Pair.of(1, SetEntityLookTargetSometimes.create(EntityType.PLAYER, 6.0F, UniformInt.of(40, 80))),
-                
-                // Prio 2: Herumlaufen oder Stillstehen
-                // Nur wenn kein Walk-Target gesetzt ist UND Transport-Cooldown aktiv ist
-                Pair.of(2, new RunOne<>(
-                    ImmutableMap.of(
-                        MemoryModuleType.WALK_TARGET, MemoryStatus.VALUE_ABSENT,
-                        ModMemoryTypes.TRANSPORT_ITEMS_COOLDOWN_TICKS.get(), MemoryStatus.VALUE_PRESENT
-                    ),
-                    ImmutableList.of(
-                        // 50% Chance: Zufällig herumlaufen (1.0 Speed, max 2 Blöcke horizontal, 2 Blöcke vertikal)
-                        Pair.of(RandomStroll.stroll(1.0F, 2, 2), 1),
-                        // 50% Chance: Stillstehen für 30-60 Ticks
-                        Pair.of(new DoNothing(30, 60), 1)
-                    )
-                ))
+                // 50% Chance: Zufällig herumlaufen (1.0 Speed, max 2 Blöcke horizontal, 2 Blöcke vertikal)
+                Pair.of(RandomStroll.stroll(1.0F, 2, 2), 1),
+                // 50% Chance: Stillstehen für 30-60 Ticks
+                Pair.of(new DoNothing(30, 60), 1)
             )
-        );
+        )));
+        
+        brain.addActivity(Activity.IDLE, behaviorsBuilder.build());
     }
     
     /**
