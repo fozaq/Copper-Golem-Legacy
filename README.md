@@ -8,6 +8,8 @@
 
 A Minecraft mod that brings back the Copper Golem from the Minecraft Live 2021 mob vote. This lovable copper companion oxidizes over time, can hold items, press copper buttons, and eventually becomes a statue.
 
+[![transport](./,github/media/transport.gif)
+
 ## Features
 
 ### Copper Golem Entity
@@ -33,6 +35,10 @@ A Minecraft mod that brings back the Copper Golem from the Minecraft Live 2021 m
 - **50+ custom sounds**: Complete sound system for entities, blocks, and interactions
 - **Oxidation-specific audio**: Different sounds for each weathering stage
 - **Item interaction feedback**: Audio cues when golems pick up, drop, or interact with items
+
+## Spawn
+[![spawn](./,github/media/spawn.gif)
+- Place a carved pumpkin on a copper block
 
 ## Installation
 
