@@ -2,7 +2,7 @@
 
 All notable changes to the Copper Golem Legacy mod will be documented in this file.
 
-## [0.0.3] - 2025-01-18
+## [0.0.3] - 2025-11-18
 
 ### Added
 - **Copper Button System**
@@ -73,7 +73,7 @@ All notable changes to the Copper Golem Legacy mod will be documented in this fi
 - FMLCommonSetupEvent listener for button reference initialization
 - Enhanced animation state management for cleaner, more realistic button pressing behavior
 
-## [0.0.2] - 2025-01-18
+## [0.0.2] - 2025-11-18
 
 ### Fixed
 - **Item Sorting Bug**: Fixed Copper Golems skipping slots when placing items in chests
@@ -81,7 +81,7 @@ All notable changes to the Copper Golem Legacy mod will be documented in this fi
   - Fixed incorrect stack size calculation when stacking items (`spaceLeft` vs `toAdd`)
   - Items now fill chest slots consecutively without gaps
 
-## [0.0.1] - 2025-01-18
+## [0.0.1] - 2025-11-18
 
 ### Added
 - Initial release of Copper Golem Legacy
