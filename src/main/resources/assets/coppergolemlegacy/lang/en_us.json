@@ -26,6 +26,12 @@
   "subtitles.block.copper_chest.close": "Copper Chest closes",
   "subtitles.block.copper_chest.open": "Copper Chest opens",
 
+  "coppergolemlegacy.config.title": "Copper Golem Legacy Configuration",
+  "coppergolemlegacy.config.golemPressesButtons": "Golem Presses Buttons",
+  "coppergolemlegacy.config.golemPressesButtons.tooltip": "Enable or disable Copper Golems randomly pressing copper buttons (20% chance every 7.5 seconds)",
+  "coppergolemlegacy.config.enabled": "Enabled",
+  "coppergolemlegacy.config.disabled": "Disabled",
+  
   "coppergolemlegacy.configuration.title": "Copper Golem Legacy Configuration",
   "coppergolemlegacy.configuration.coppergolemai": "Copper Golem AI",
   "coppergolemlegacy.configuration.golemPressesButtons": "Golem Presses Buttons",

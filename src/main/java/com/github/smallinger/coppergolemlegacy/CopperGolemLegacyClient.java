@@ -11,16 +11,25 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.client.ConfigScreenHandler;
 
 // This class will not load on dedicated servers. Accessing client side code from here is safe.
 @Mod.EventBusSubscriber(modid = CopperGolemLegacy.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class CopperGolemLegacyClient {
-    public static void init() {
-        // Config screen removed - Forge 1.20.1 doesn't have ConfigScreenHandler
-    }
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
+        // Register config screen for Forge 1.20.1 using ExtensionPoint
+        event.enqueueWork(() -> {
+            ModLoadingContext.get().registerExtensionPoint(
+                ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new ConfigScreenHandler.ConfigScreenFactory(
+                    (mc, screen) -> CopperGolemLegacyConfig.createConfigScreen(screen)
+                )
+            );
+        });
+        
         // Some client setup code
         CopperGolemLegacy.LOGGER.info("HELLO FROM CLIENT SETUP");
         CopperGolemLegacy.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());

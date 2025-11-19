@@ -30,7 +30,7 @@ import java.util.Set;
  * und schlieÃŸt sie wieder nach dem Durchgang.
  */
 public class InteractWithDoor {
-    private static final int COOLDOWN_BEFORE_RERUNNING_IN_SAME_NODE = 20;
+    private static final int COOLDOWN_BEFORE_RERUNNING_IN_SAME_NODE = 10;
     private static final double SKIP_CLOSING_DOOR_IF_FURTHER_AWAY_THAN = 3.0;
     private static final double MAX_DISTANCE_TO_HOLD_DOOR_OPEN_FOR_OTHER_MOBS = 2.0;
 

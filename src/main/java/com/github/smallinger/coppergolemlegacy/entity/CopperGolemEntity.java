@@ -100,6 +100,10 @@ public class CopperGolemEntity extends AbstractGolem implements Shearable, Conta
         this.setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.DANGER_FIRE, 16.0F);
         this.setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.DANGER_OTHER, 16.0F);
         this.setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.DAMAGE_FIRE, -1.0F);
+        // Türen-Pathfinding: Keine Malus für offene/geschlossene Türen
+        this.setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.DOOR_WOOD_CLOSED, 0.0F);
+        this.setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.DOOR_OPEN, 0.0F);
+        this.setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.DOOR_IRON_CLOSED, -1.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {

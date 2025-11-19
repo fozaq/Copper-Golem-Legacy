@@ -62,7 +62,7 @@ public class CopperGolemLegacy {
     // Register Copper Golem Entity
     public static final RegistryObject<EntityType<CopperGolemEntity>> COPPER_GOLEM = ENTITY_TYPES.register("copper_golem",
         () -> EntityType.Builder.of(CopperGolemEntity::new, MobCategory.MISC)
-            .sized(0.7F, 1.3F)
+            .sized(0.6F, 1.3F)  // Breite: 0.6 (schmaler für besseres Durchgehen durch Türen), Höhe: 1.3
             .clientTrackingRange(8)
             .build("copper_golem"));
     

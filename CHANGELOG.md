@@ -1,6 +1,6 @@
 # Changelog - Forge 1.20.1 Port
 
-## [1.20.1-0.0.3] - 2025-11-19
+## [1.20.1-0.0.4] - 2025-11-19
 
 ### Port Information
 Complete port from **NeoForge 1.21.1** to **Forge 1.20.1**
@@ -174,9 +174,20 @@ Complete port from **NeoForge 1.21.1** to **Forge 1.20.1**
 - **Java Requirement**: Java 17 (not compatible with Java 21)
 
 ### Known Limitations
-- **Config Screen**: No in-game config GUI (Forge 1.20.1 limitation)
+- **Config Screen**: In-game config GUI available via Mods menu
 - **Copper BlockSetType**: Uses IRON instead of COPPER (not available in 1.20.1)
 - **Button Behavior**: Oxidized button check moved from `useWithoutItem()` to main `use()` method
+
+### Added - Configuration System
+- **Config Screen**: In-game GUI for mod configuration
+  - Accessible via Mods menu → Copper Golem Legacy → Config button
+  - Toggle button for "Golem Presses Buttons" setting
+  - Visual feedback: Green text when enabled, red when disabled
+  - Tooltip explains behavior: "20% chance every 7.5 seconds"
+  - Changes save automatically to `config/coppergolemlegacy-common.toml`
+- **Config Registration**: Properly registered using Forge's `ConfigScreenHandler.ConfigScreenFactory`
+  - Registered in `FMLClientSetupEvent` for thread-safety
+  - Uses `event.enqueueWork()` for proper initialization timing
 
 ### Added - AI Behavior System
 - **Item Transport Behavior**: Golems now transport items between containers
@@ -215,20 +226,23 @@ Complete port from **NeoForge 1.21.1** to **Forge 1.20.1**
 - ✅ Item Transport: Working (golem walks to copper chest, picks up items, delivers to regular chest)
 - ✅ Button Pressing: Working (golem presses buttons with 20% chance, no interruptions)
 - ✅ Behavior Priority: Working (transport has priority but doesn't interrupt button pressing)
-- ⏳ Feature Verification: Ready for release
+- ✅ Config Screen: Working (accessible via Mods menu, settings save correctly)
+- ✅ GitHub Actions: Fixed (added --no-configuration-cache flag for Gradle 8.7 compatibility)
+- ✅ Feature Verification: Complete - Ready for release
 
 ### File Changes Summary
-- **Modified**: 38+ Java source files
+- **Modified**: 40+ Java source files
   - Core API migration (35+ files)
   - AI behavior enhancements (3 files: `CopperGolemAi.java`, `PressRandomCopperButton.java`, `TransportItemsBetweenContainers.java`)
+  - Config screen implementation (2 files: `CopperGolemLegacyClient.java`, `CopperGolemLegacyConfig.java`)
 - **Created**: 5 new files
   - `META-INF/mods.toml` (Forge metadata)
   - `pack.mcmeta` (Resource pack metadata)
   - `data/coppergolemlegacy/tags/blocks/copper.json` (Block tag for spawning)
   - `data/coppergolemlegacy/tags/blocks/copper_chests.json` (Block tag for item transport)
   - `ModMemoryTypes.java` enhancement (added IS_PRESSING_BUTTON memory type)
-- **Build Files**: 4 files changed (`build.gradle`, `gradle.properties`, `settings.gradle`, `gradle-wrapper.properties`)
-- **Total Lines Changed**: 750+ lines of code
+- **Build Files**: 5 files changed (`build.gradle`, `gradle.properties`, `settings.gradle`, `gradle-wrapper.properties`, `.github/workflows/release.yml`)
+- **Total Lines Changed**: 800+ lines of code
 
 ### Development Notes
 - Port completed on November 19, 2025

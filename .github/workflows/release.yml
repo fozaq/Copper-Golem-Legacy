@@ -26,7 +26,7 @@ jobs:
       run: chmod +x gradlew
       
     - name: Build with Gradle
-      run: ./gradlew build --no-daemon
+      run: ./gradlew build --no-daemon --no-configuration-cache
       
     - name: Get version from gradle.properties
       id: get_version
