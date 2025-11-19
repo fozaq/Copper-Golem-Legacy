@@ -53,7 +53,7 @@ public class TransportItemsBetweenContainers extends Behavior<PathfinderMob> {
     private static final int IDLE_COOLDOWN = 140;
     private static final double CLOSE_ENOUGH_TO_START_QUEUING_DISTANCE = 3.0;
     private static final double CLOSE_ENOUGH_TO_START_INTERACTING_WITH_TARGET_DISTANCE = 0.5;
-    private static final double CLOSE_ENOUGH_TO_START_INTERACTING_WITH_TARGET_PATH_END_DISTANCE = 1.0;
+    private static final double CLOSE_ENOUGH_TO_START_INTERACTING_WITH_TARGET_PATH_END_DISTANCE = 1.1;
     private static final double CLOSE_ENOUGH_TO_CONTINUE_INTERACTING_WITH_TARGET = 2.0;
     
     private final float speedModifier;
@@ -489,7 +489,7 @@ public class TransportItemsBetweenContainers extends Behavior<PathfinderMob> {
         AABB centerBounds = AABB.ofSize(center, mobBounds.getXsize(), mobBounds.getYsize(), mobBounds.getZsize());
         return target.state.getCollisionShape(level, target.pos)
             .bounds()
-            .inflate(distance, 0.5, distance)
+            .inflate(distance, distance, distance)
             .move(target.pos)
             .intersects(centerBounds);
     }

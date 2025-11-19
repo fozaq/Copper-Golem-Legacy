@@ -2,6 +2,25 @@
 
 All notable changes to the Copper Golem Legacy mod will be documented in this file.
 
+## [0.0.4] - 2025-11-19
+
+### Changed
+- **Entity Size**: Reduced Copper Golem width from 0.7 to 0.6 blocks
+  - Allows golem to fit through doors more easily
+
+### Fixed
+- **Chest Interaction Range**: Fixed vertical distance detection for chest interactions
+  - Increased vertical reach from 0.5 to match horizontal distance (0.5-1.0 blocks)
+  - Golems can now properly reach chests that are one block above or below them
+  - Fixes issue where golem standing on a block couldn't interact with chest one block below
+  
+- **Spawn Behavior**
+  - Copper Golems now perform idle walk animation after spawning before checking the chest they spawned on
+  - Added initial 140-tick (7 second) transport cooldown when golem spawns
+  - Prevents golem from immediately trying to interact with spawn chest
+  - Allows idle walk/animation behavior to trigger naturally after spawn
+
+
 ## [0.0.3] - 2025-11-18
 
 ### Added
