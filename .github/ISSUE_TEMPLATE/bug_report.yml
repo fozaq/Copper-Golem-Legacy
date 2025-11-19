@@ -1,0 +1,108 @@
+name: Bug Report
+description: Report a bug or an issue with the mod.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: mod_version
+    attributes:
+      label: Mod Version
+      description: Which version of the mod are you using?
+      options:
+        - "1.21.1-0.0.4"
+        - "1.21.1-0.0.3"
+        - "1.21.1-0.0.2"
+        - "1.21.1-0.0.1"
+        - Other (please specify in description)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: loader_version
+    attributes:
+      label: Mod Loader
+      description: Which mod loader are you using?
+      options:
+        - NeoForge
+        - Forge
+    validations:
+      required: true
+
+  - type: input
+    id: minecraft_version
+    attributes:
+      label: Minecraft Version
+      description: Which Minecraft version are you playing on?
+      placeholder: "e.g., 1.21.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: installed_mods
+    attributes:
+      label: Installed Mods
+      description: Please list all mods you have installed (or paste your mod list).
+      placeholder: |
+        - Mod 1 - version
+        - Mod 2 - version
+        - etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Describe the problem in as much detail as possible.
+      placeholder: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps_to_reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide step-by-step instructions to reproduce the bug.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: A clear description of what you expected to happen.
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem. You can drag and drop images here.
+      placeholder: Drag and drop screenshots here or paste image URLs.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Please provide relevant log files (latest.log or crash report).
+      placeholder: Paste logs here or provide a link to a paste service like pastebin.com or gist.github.com
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_information
+    attributes:
+      label: Additional Information
+      description: Any other relevant information that might help us understand and fix the issue.
+    validations:
+      required: false
