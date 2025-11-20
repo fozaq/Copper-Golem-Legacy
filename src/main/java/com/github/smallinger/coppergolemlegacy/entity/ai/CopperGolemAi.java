@@ -113,11 +113,11 @@ public class CopperGolemAi {
     private static void initIdleActivity(Brain<CopperGolemEntity> brain) {
         ImmutableList.Builder<Pair<Integer, ? extends BehaviorControl<? super CopperGolemEntity>>> behaviorsBuilder = ImmutableList.builder();
         
-        // Prio 0: Item Transport zwischen Copper Chests und Regular Chests
+        // Prio 0: Item Transport zwischen Copper Chests und Target Chests (alle kompatiblen Chests)
         behaviorsBuilder.add(Pair.of(0, new TransportItemsBetweenContainers(
             1.0F,  // Speed Modifier
-            state -> state.is(ModTags.Blocks.COPPER_CHESTS),  // Source: Copper Chests
-            state -> state.is(Blocks.CHEST) || state.is(Blocks.TRAPPED_CHEST),  // Destination: Regular Chests
+            state -> state.is(ModTags.Blocks.COPPER_CHESTS),  // Source: Nur Copper Chests (fest)
+            state -> state.is(ModTags.Blocks.GOLEM_TARGET_CHESTS),  // Target: Alle kompatiblen Chests (über Tag erweiterbar)
             32,  // Horizontal Search Distance
             8,   // Vertical Search Distance
             getTargetReachedInteractions(),  // Interaction callbacks
@@ -207,12 +207,16 @@ public class CopperGolemAi {
      */
     private static void playChestSound(CopperGolemEntity golem, BlockPos pos, boolean open) {
         Level level = golem.level();
+        net.minecraft.world.level.block.state.BlockState blockState = level.getBlockState(pos);
         
-        // Spiele den entsprechenden Sound (Copper Chest oder Regular Chest)
+        // Spiele den entsprechenden Sound (Copper Chest, Barrel oder Regular Chest)
         net.minecraft.sounds.SoundEvent soundEvent;
-        if (level.getBlockState(pos).is(ModTags.Blocks.COPPER_CHESTS)) {
+        if (blockState.is(ModTags.Blocks.COPPER_CHESTS)) {
             // Copper Chest Sound
             soundEvent = open ? ModSounds.COPPER_CHEST_OPEN.get() : ModSounds.COPPER_CHEST_CLOSE.get();
+        } else if (blockState.is(Blocks.BARREL)) {
+            // Barrel Sound
+            soundEvent = open ? SoundEvents.BARREL_OPEN : SoundEvents.BARREL_CLOSE;
         } else {
             // Regular Chest Sound
             soundEvent = open ? SoundEvents.CHEST_OPEN : SoundEvents.CHEST_CLOSE;
@@ -220,10 +224,20 @@ public class CopperGolemAi {
         
         level.playSound(null, pos, soundEvent, SoundSource.BLOCKS, 0.5F, level.random.nextFloat() * 0.1F + 0.9F);
         
-        // Triggere die Chest Animation (1 = open, 0 = close)
+        // Triggere die Container Animation
         net.minecraft.world.level.block.entity.BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof net.minecraft.world.level.block.entity.ChestBlockEntity) {
-            level.blockEvent(pos, level.getBlockState(pos).getBlock(), 1, open ? 1 : 0);
+        
+        // Barrel: Setze direkt den OPEN BlockState Property
+        if (blockState.is(Blocks.BARREL)) {
+            level.setBlock(pos, blockState.setValue(net.minecraft.world.level.block.BarrelBlock.OPEN, open), 3);
+        }
+        // Chests: Nutze blockEvent für Animation
+        else if (blockEntity instanceof net.minecraft.world.level.block.entity.ChestBlockEntity) {
+            level.blockEvent(pos, blockState.getBlock(), 1, open ? 1 : 0);
+        }
+        // Andere Container (IronChest etc.): Versuche blockEvent
+        else if (blockEntity instanceof net.minecraft.world.level.block.entity.BaseContainerBlockEntity) {
+            level.blockEvent(pos, blockState.getBlock(), 1, open ? 1 : 0);
         }
         
         // GameEvent für andere Systeme

@@ -2,7 +2,65 @@
 
 All notable changes to the Copper Golem Legacy mod will be documented in this file.
 
-## [0.0.4] - 2025-11-19
+## [1.21.1-0.0.5] - 2025-11-20
+
+### Added
+- **Mod Compatibility System**
+  - Flexible tag-based system for chest interactions
+  - New block tags: `golem_target_chests`
+  - Target chests define where golems can **place items to** (all compatible chests)
+  - Easy mod integration without code changes - just add block IDs to tags
+
+- **Barrel Support**
+  - Copper Golems can now place items into barrels
+  - Correct barrel sounds (`BARREL_OPEN` / `BARREL_CLOSE`) when interacting
+  - Added `minecraft:barrel` to `golem_target_chests` tag
+
+- **IronChest Mod Integration**
+  - Full support for all 14 IronChest variants (7 types + trapped variants)
+  - Supported chests: iron, gold, diamond, copper, crystal, obsidian, dirt
+  - Both regular and trapped versions work with golem item transport
+
+- **Documentation**
+  - `CHEST_COMPATIBILITY.md` - Complete guide for adding new mod support
+  - `datapack_example/` - Example datapack for players to add custom chests
+  - Instructions for three integration methods: direct block IDs, mod tags, datapacks
+  - Examples for popular mods (Storage Drawers, Sophisticated Storage, AE2)
+
+### Changed
+- **AI Sound System**
+  - Enhanced `playChestSound()` method with container-type detection
+  - Automatic sound selection based on container type:
+    - Copper Chests → Custom copper chest sounds
+    - Barrels → Barrel-specific sounds
+    - Regular Chests → Standard chest sounds
+  - Improved blockState caching for better performance
+
+- **Code Structure**
+  - `ModTags.java` - Added `GOLEM_TARGET_CHESTS` constants
+  - `CopperGolemAi.java` - Refactored to use tags instead of hardcoded block checks
+  - More maintainable and extensible architecture
+
+### Fixed
+- **Container Detection Bug**
+  - Fixed golem only detecting vanilla chests (`ChestBlockEntity`)
+  - Now properly detects all container types including barrels and mod chests
+  - Changed search from `ChestBlockEntity` to `BaseContainerBlockEntity`
+  - Enables support for IronChest, barrels, and other mod containers
+
+- **Container Animation Bug**
+  - Fixed missing open/close animations for barrels and mod chests
+  - Barrels now correctly animate using `OPEN` BlockState property
+  - Chests use `blockEvent` for animation
+  - All container types (vanilla, barrels, mod chests) now animate properly
+
+### Technical
+- Tag-based predicates in `TransportItemsBetweenContainers` behavior
+- Container type detection with proper sound event mapping
+- Support for datapack-based chest additions with `"replace": false` pattern
+- Performance-optimized through Minecraft's tag caching system
+
+## [1.21.1-0.0.4] - 2025-11-19
 
 ### Changed
 - **Entity Size**: Reduced Copper Golem width from 0.7 to 0.6 blocks
@@ -21,7 +79,7 @@ All notable changes to the Copper Golem Legacy mod will be documented in this fi
   - Allows idle walk/animation behavior to trigger naturally after spawn
 
 
-## [0.0.3] - 2025-11-18
+## [1.21.1-0.0.3] - 2025-11-18
 
 ### Added
 - **Copper Button System**
@@ -92,7 +150,7 @@ All notable changes to the Copper Golem Legacy mod will be documented in this fi
 - FMLCommonSetupEvent listener for button reference initialization
 - Enhanced animation state management for cleaner, more realistic button pressing behavior
 
-## [0.0.2] - 2025-11-18
+## [1.21.1-0.0.2] - 2025-11-18
 
 ### Fixed
 - **Item Sorting Bug**: Fixed Copper Golems skipping slots when placing items in chests
@@ -100,7 +158,7 @@ All notable changes to the Copper Golem Legacy mod will be documented in this fi
   - Fixed incorrect stack size calculation when stacking items (`spaceLeft` vs `toAdd`)
   - Items now fill chest slots consecutively without gaps
 
-## [0.0.1] - 2025-11-18
+## [1.21.1-0.0.1] - 2025-11-18
 
 ### Added
 - Initial release of Copper Golem Legacy

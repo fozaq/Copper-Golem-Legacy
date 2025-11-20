@@ -17,6 +17,7 @@ A Minecraft mod that brings back the Copper Golem from the Minecraft Live 2021 m
 - **Oxidation system**: Copper golems age through four stages (normal, exposed, weathered, oxidized)
 - **Item interactions**: Give items to your golem - they'll store them in their chest and show them off
 - **Button pressing**: Golems randomly press copper buttons, acting as natural randomizers
+- **Item transport**: Golems can transport items from Copper Chests to other chests (see [Chest Compatibility](CHEST_COMPATIBILITY.md))
 - **Player-oriented spawning**: Golems and their chests face toward you when spawned
 
 ### Copper Chest

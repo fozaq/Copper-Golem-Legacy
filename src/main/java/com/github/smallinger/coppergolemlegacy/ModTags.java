@@ -9,6 +9,7 @@ public class ModTags {
     public static class Blocks {
         public static final TagKey<Block> COPPER = tag("copper");
         public static final TagKey<Block> COPPER_CHESTS = tag("copper_chests");
+        public static final TagKey<Block> GOLEM_TARGET_CHESTS = tag("golem_target_chests");
 
         private static TagKey<Block> tag(String name) {
             return TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(CopperGolemLegacy.MODID, name));

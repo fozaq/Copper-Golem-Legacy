@@ -300,11 +300,12 @@ public class TransportItemsBetweenContainers extends Behavior<PathfinderMob> {
             LevelChunk chunk = level.getChunkSource().getChunkNow(chunkPos.x, chunkPos.z);
             if (chunk != null) {
                 for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
-                    if (blockEntity instanceof ChestBlockEntity chestBlockEntity) {
-                        double distance = chestBlockEntity.getBlockPos().distToCenterSqr(mob.position());
+                    // Support all container types (Chests, Barrels, IronChest, etc.)
+                    if (blockEntity instanceof BaseContainerBlockEntity containerBlockEntity) {
+                        double distance = containerBlockEntity.getBlockPos().distToCenterSqr(mob.position());
                         if (distance < bestDistance) {
                             TransportItemTarget candidateTarget = this.isTargetValidToPick(
-                                mob, level, chestBlockEntity, visited, unreachable, aabb
+                                mob, level, containerBlockEntity, visited, unreachable, aabb
                             );
                             if (candidateTarget != null) {
                                 bestTarget = candidateTarget;
