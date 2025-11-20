@@ -16,7 +16,7 @@ A Minecraft mod that brings back the Copper Golem from the Minecraft Live 2021 m
 - **Natural spawning**: Place a carved pumpkin on a copper block to summon your golem
 - **Oxidation system**: Copper golems age through four stages (normal, exposed, weathered, oxidized)
 - **Item interactions**: Give items to your golem - they'll store them in their chest and show them off
-- **Item transport**: Golems automatically transport items from copper chests to regular chests within a 65×17×65 block area
+- **Item transport**: Golems can transport items from Copper Chests to other chests (see [Chest Compatibility](CHEST_COMPATIBILITY.md))
 - **Button pressing**: Golems randomly press copper buttons with 20% chance, acting as natural randomizers
 - **Player-oriented spawning**: Golems and their chests face toward you when spawned
 

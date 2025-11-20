@@ -28,6 +28,7 @@ import net.minecraft.world.entity.ai.sensing.SensorType;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -118,7 +119,7 @@ public class CopperGolemAi {
         behaviorsBuilder.add(Pair.of(0, new TransportItemsBetweenContainers(
             1.0F,  // Speed Modifier
             state -> state.is(ModTags.Blocks.COPPER_CHESTS),  // Source: Copper Chests
-            state -> state.is(Blocks.CHEST) || state.is(Blocks.TRAPPED_CHEST),  // Destination: Regular Chests
+            state -> state.is(ModTags.Blocks.GOLEM_TARGET_CHESTS),  // Destination: Target Chests (via tag)
             32,  // Horizontal Search Distance
             8,   // Vertical Search Distance
             getTargetReachedInteractions(),  // Interaction callbacks
@@ -205,29 +206,41 @@ public class CopperGolemAi {
     
     /**
      * Spielt den Chest Open/Close Sound ab und triggert die Animation
+     * Unterstützt: Copper Chests, Barrels, Regular Chests
      */
     private static void playChestSound(CopperGolemEntity golem, BlockPos pos, boolean open) {
         Level level = golem.level();
+        BlockState blockState = level.getBlockState(pos);
         
-        // Spiele den entsprechenden Sound (Copper Chest oder Regular Chest)
+        // Determine sound based on container type
         net.minecraft.sounds.SoundEvent soundEvent;
-        if (level.getBlockState(pos).is(ModTags.Blocks.COPPER_CHESTS)) {
+        if (blockState.is(ModTags.Blocks.COPPER_CHESTS)) {
             // Copper Chest Sound
             soundEvent = open ? ModSounds.COPPER_CHEST_OPEN.get() : ModSounds.COPPER_CHEST_CLOSE.get();
+        } else if (blockState.is(Blocks.BARREL)) {
+            // Barrel Sound
+            soundEvent = open ? SoundEvents.BARREL_OPEN : SoundEvents.BARREL_CLOSE;
         } else {
-            // Regular Chest Sound
+            // Regular Chest Sound (default)
             soundEvent = open ? SoundEvents.CHEST_OPEN : SoundEvents.CHEST_CLOSE;
         }
         
         level.playSound(null, pos, soundEvent, SoundSource.BLOCKS, 0.5F, level.random.nextFloat() * 0.1F + 0.9F);
         
-        // Triggere die Chest Animation (1 = open, 0 = close)
+        // Trigger container animation
         net.minecraft.world.level.block.entity.BlockEntity blockEntity = level.getBlockEntity(pos);
-        if (blockEntity instanceof net.minecraft.world.level.block.entity.ChestBlockEntity) {
-            level.blockEvent(pos, level.getBlockState(pos).getBlock(), 1, open ? 1 : 0);
+        if (blockEntity != null) {
+            if (blockState.is(Blocks.BARREL)) {
+                // Barrels use BlockState property for animation
+                level.setBlock(pos, blockState.setValue(net.minecraft.world.level.block.BarrelBlock.OPEN, open), 3);
+            } else {
+                // Try blockEvent for chest-like containers (vanilla chests, IronChest, etc.)
+                // Most chest mods use the same blockEvent system as vanilla
+                level.blockEvent(pos, blockState.getBlock(), 1, open ? 1 : 0);
+            }
         }
         
-        // GameEvent für andere Systeme
+        // GameEvent for other systems
         level.gameEvent(golem, 
             open ? net.minecraft.world.level.gameevent.GameEvent.CONTAINER_OPEN : net.minecraft.world.level.gameevent.GameEvent.CONTAINER_CLOSE, 
             pos);

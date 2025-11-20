@@ -23,7 +23,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -310,12 +309,13 @@ public class TransportItemsBetweenContainers extends Behavior<PathfinderMob> {
             LevelChunk chunk = level.getChunk(chunkPos.x, chunkPos.z);
             if (chunk != null) {
                 for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
-                    if (blockEntity instanceof ChestBlockEntity chestBlockEntity) {
+                    // Support all container types (BaseContainerBlockEntity) - not just chests
+                    if (blockEntity instanceof BaseContainerBlockEntity containerBlockEntity) {
                         chestsFound++;
-                        double distance = chestBlockEntity.getBlockPos().distToCenterSqr(mob.position());
+                        double distance = containerBlockEntity.getBlockPos().distToCenterSqr(mob.position());
                         if (distance < bestDistance) {
                             TransportItemTarget candidateTarget = this.isTargetValidToPick(
-                                mob, level, chestBlockEntity, visited, unreachable, aabb
+                                mob, level, containerBlockEntity, visited, unreachable, aabb
                             );
                             if (candidateTarget != null) {
                                 bestTarget = candidateTarget;

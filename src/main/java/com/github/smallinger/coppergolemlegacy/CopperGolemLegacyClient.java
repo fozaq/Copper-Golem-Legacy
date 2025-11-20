@@ -1,5 +1,6 @@
 package com.github.smallinger.coppergolemlegacy;
 
+import com.github.smallinger.coppergolemlegacy.client.ConfigScreenFactory;
 import com.github.smallinger.coppergolemlegacy.client.model.CopperGolemModel;
 import com.github.smallinger.coppergolemlegacy.client.renderer.CopperChestRenderer;
 import com.github.smallinger.coppergolemlegacy.client.renderer.CopperGolemRenderer;
@@ -25,7 +26,7 @@ public class CopperGolemLegacyClient {
             ModLoadingContext.get().registerExtensionPoint(
                 ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
-                    (mc, screen) -> CopperGolemLegacyConfig.createConfigScreen(screen)
+                    (mc, screen) -> ConfigScreenFactory.createConfigScreen(screen)
                 )
             );
         });
